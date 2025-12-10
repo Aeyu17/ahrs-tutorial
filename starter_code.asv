@@ -19,24 +19,16 @@ plot([eul_acc(:,3),eul_kf(:,3)]);
 legend('acc','kf')
 
 %% Full State EKF
+
 n = size(gyr, 1);
-
-gyrNoise = 0.001;
-
 x = [ones(1, n); zeros(3, n)];
-P = eyes(4);
 
 for i = 1:n
     % Time update
-    % x = f(x_(k-1), u_(k-1), 0)
-    f = eyes(4); % What should this actually be?
-    x(:, i+1) = f*x(:, i);
-
-    % P = A*P_(k-1)*A' + W*Q_(k-1)*W'
+    % x_k = f(x_(k-1), u_(k-1), 0)
+    % P_k = A_k*P_(k-1)*A_k' + W_k*Q_(k-1)*W_k'
 
     % Measurement update
-    % K = P*H' * (H*P*H' + V*R*V')^-1
-    % x = x - K * (z - h)
-    % P = (I - K*H) * P
+    % K_k = P_k 
 
 end
