@@ -22,7 +22,6 @@ def importADPM(file: str, id: str) -> SensorData:
 
         accel = calibrated_sensor_data['Accelerometers'][:]
         gyro = calibrated_sensor_data['Gyroscopes'][:]
-        print(gyro)
         if data.attrs['MagnetometersEnabled'] == 0:
             mag = calibrated_sensor_data['Magnetometers'][:]
         else:

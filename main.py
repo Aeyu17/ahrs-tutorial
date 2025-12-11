@@ -9,11 +9,12 @@ def main():
     filename = 'howard_arm_cal_646.h5'
     id = 'SI-000646'
     data: SensorData = importADPM(filename, id)
+    # howard_quat = np.loadtxt('bruh2.csv', delimiter=',')
 
+    # howard_euler = quatToEuler(howard_quat)
     euler = quatToEuler(data.quat)
 
     # Full State EKF
-
     n = np.shape(data.gyro)[0]
     dt = 1/data.freq
 
@@ -39,8 +40,8 @@ def main():
         f[0, 1:] = - data.gyro[i, :] # technically transposed, but not needed heres
         f[1:, 0] = data.gyro[i, :]
         f[1:, 1:] = -skew3(data.gyro[i, :])
-        f *= 2 * dt
-        f += np.eye(4)
+        f *= 0.5 * dt
+        f += np.identity(4)
 
         x[:, i+1] = quatNormalise(f @ x[:, i])
 
@@ -56,7 +57,8 @@ def main():
     plt.figure()
     plt.plot(euler[:, 1])
     plt.plot(ekf_euler[:, 1])
-    plt.legend(['acc', 'kf'])
+    # plt.plot(howard_euler[:, 1])
+    plt.legend(['acc', 'kf', 'howard'])
     plt.show()
 
 if __name__ == "__main__":
