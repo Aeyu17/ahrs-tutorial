@@ -1,2 +1,4 @@
 *.h5
-*.zip
+*.m
+__pycache__
+.venv
