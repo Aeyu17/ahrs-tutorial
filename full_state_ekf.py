@@ -64,7 +64,7 @@ def main():
         H *= 2 * g
         K = P @ H.transpose() @ np.linalg.inv(H @ P @ H.transpose() + R)
 
-        # x = x - K * (z - h)
+        # x = x + K * (z - h)
         h = quatToDCM(x[:, i+1]).transpose() @ np.array([0, 0, g])
         x[:, i+1] = x[:, i+1] + K @ (data.accel[i, :] - h)
         x[:, i+1] = quatNormalise(x[:, i+1])

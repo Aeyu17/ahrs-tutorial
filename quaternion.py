@@ -2,6 +2,7 @@ import numpy as np
 from math import atan2, asin, sqrt, cos, sin
 
 def quatToEuler(quat: np.ndarray):
+    # Asking for 2 dim quaternion because of time series
     if quat.ndim != 2 or np.shape(quat)[1] != 4:
         raise ValueError('Invalid quaternion matrix')
     
@@ -11,6 +12,21 @@ def quatToEuler(quat: np.ndarray):
         eulerArr[i, :] = singleQuatToEuler(q)
 
     return eulerArr
+
+def quatMultiply(q1: np.ndarray, q2: np.ndarray):
+    if q1.ndim != 1 or np.shape(q1)[0] != 4:
+        print(q1)
+        raise ValueError('q1 is an invalid quaternion matrix')
+    
+    if q2.ndim != 1 or np.shape(q2)[0] != 4:
+        raise ValueError('q2 is an invalid quaternion matrix')
+    
+    q = np.array([q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3],
+                  q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2],
+                  q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1],
+                  q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0]])
+    
+    return q
 
 def incAccel(accel):
     # %calculate pitch and roll from accel
