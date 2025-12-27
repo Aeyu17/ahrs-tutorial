@@ -22,7 +22,6 @@ def main():
     acc_noise = 0.1
 
     # Quaternions are column vectors
-    # NOTE: (*) in comments means quat multiply
     x = np.zeros(shape=(4, n))
     x[0, :] = np.ones(shape=(1, n))
 
@@ -67,8 +66,6 @@ def main():
 
         # x = x - K * (z - h)
         h = quatToDCM(x[:, i+1]).transpose() @ np.array([0, 0, g])
-        if i < 5:
-            print(h)
         x[:, i+1] = x[:, i+1] + K @ (data.accel[i, :] - h)
         x[:, i+1] = quatNormalise(x[:, i+1])
         # P = (I - K*H) * P
