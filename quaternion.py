@@ -109,22 +109,28 @@ def skew3(vec):
         raise ValueError('Skew function only takes vectors of size 3')
     return np.cross(vec, np.identity(vec.shape[0]) * -1)
 
+def ndarrayToQuat(q: np.ndarray) -> Quaternion:
+    if q.ndim != 1 or np.shape(q)[0] != 4:
+        raise ValueError('Invalid quaternion matrix')
+    
+    return Quaternion(q[0], q[1], q[2], q[3])
+
 class Quaternion:
     def __init__(self, w: float = 1.0, x: float = 0.0, y: float = 0.0, z: float = 0.0):
         self.quat = np.array([w, x, y, z])
 
-    def w(self):
+    def w(self) -> float:
         # returns the real part of q
         return self.quat[0]
     
-    def vector(self):
+    def vector(self) -> np.ndarray:
         # returns the imaginary part of q
         return self.quat[1:]
 
-    def __setitem__(self, val):
+    def __getitem__(self, val):
         return self.quat[val]
 
-    def __matmul__(self, other):
+    def __matmul__(self, other) -> Quaternion:
         # using __matmul__ to define quaternion multiplication
         if not isinstance(other, Quaternion):
             raise NotImplemented
@@ -136,22 +142,22 @@ class Quaternion:
         
         return q
     
-    def toEuler(self):
+    def toEuler(self) -> tuple[float, float, float]:
         roll = atan2(2 * (self[0] * self[1] + self[2] * self[3]), self[0]**2 - self[1]**2 - self[2]**2 + self[3]**2)
         pitch = asin(2 * (self[0] * self[2] - self[3] * self[1]))
         yaw = atan2(2 * (self[0] * self[3] + self[1] * self[2]), self[0]**2 + self[1]**2 - self[2]**2 - self[3]**2)
 
         return (roll, pitch, yaw)
     
-    def normalise(self):
+    def normalise(self) -> Quaternion:
         # returns a normalised quaternion made of itself
         norm = sqrt(self[0]**2 + self[1]**2 + self[2]**2 + self[3]**2)
         return Quaternion(self.quat[0] / norm, self.quat[1] / norm, self.quat[2] / norm, self.quat[3] / norm)
     
-    def conj(self):
+    def conj(self) -> Quaternion:
         return Quaternion(self.quat[0], -self.quat[1], -self.quat[2], -self.quat[3])
         
-    def toDCM(self):
+    def toDCM(self) -> np.ndarray:
         dcm = np.zeros(shape=(3,3))
         
         dcm[0, 0] = self[0] ** 2 + self[1] ** 2 - self[2] ** 2 - self[3] ** 2
@@ -168,7 +174,7 @@ class Quaternion:
         
         return dcm
     
-    def toLeftMulMatrix(self):
+    def toLeftMulMatrix(self) -> np.ndarray:
         leftMul = np.zeros(shape=(4,4))
         leftMul[0, 0] = self.w()
         leftMul[0, 1:] = -self.vector()
@@ -176,7 +182,7 @@ class Quaternion:
         leftMul[1:, 1:] = self.w() * np.eye(3) + skew3(self.vector())
         return leftMul
 
-    def toRightMulMatrix(self):
+    def toRightMulMatrix(self) -> np.ndarray:
         rightMul = np.zeros(shape=(4,4))
         rightMul[0, 0] = self.w()
         rightMul[0, 1:] = -self.vector()
