@@ -1,6 +1,5 @@
 from import_h5 import importADPM, SensorData
-from quaternion import quatToEuler, quatNormalise, incAccel, quatMultiply, quatConj, singleQuatToEuler
-from matrix import skew3
+from quaternion import *
 
 import numpy as np
 import matplotlib.pyplot as plt

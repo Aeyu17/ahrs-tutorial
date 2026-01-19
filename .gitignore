@@ -3,3 +3,4 @@
 __pycache__
 .venv
 matlab_backup
+.DS_Store
