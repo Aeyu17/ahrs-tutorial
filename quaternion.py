@@ -1,6 +1,26 @@
 import numpy as np
 from math import atan2, asin, sqrt, cos, sin
 
+def skew3(vec):
+    if len(vec) != 3:
+        raise ValueError('Skew function only takes vectors of size 3')
+    return np.cross(vec, np.identity(vec.shape[0]) * -1)
+
+def incAccel(accel):
+    # calculate pitch and roll from accel
+    pitch = atan2(-accel[0], sqrt(accel[1] ** 2 + accel[2] ** 2))
+    roll = atan2(accel[1], accel[2])
+
+    # Convert to quaternion    
+    q = np.zeros(shape=(4))
+    q[0] = cos(pitch / 2) * cos(roll / 2)
+    q[1] = cos(pitch / 2) * sin(roll / 2)
+    q[2] = sin(pitch / 2) * cos(roll / 2)
+    q[3] = sin(pitch / 2) * sin(roll / 2)
+
+    return q
+
+# -- THESE FUNCTIONS SUPPORT NDARRAY QUATERNIONS --
 def quatToEuler(quat: np.ndarray):
     # Asking for 2 dim quaternion because of time series
     if quat.ndim != 2 or np.shape(quat)[1] != 4:
@@ -26,26 +46,6 @@ def quatMultiply(q1: np.ndarray, q2: np.ndarray):
                   q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1],
                   q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0]])
     
-    return q
-
-def incAccel(accel):
-    # %calculate pitch and roll from accel
-    # pitch=atan2(-accel(:,1),sqrt(accel(:,2).^2+accel(:,3).^2)); %pitch
-    # roll=atan2(accel(:,2),accel(:,3));  %roll
-    pitch = atan2(-accel[0], sqrt(accel[1] ** 2 + accel[2] ** 2))
-    roll = atan2(accel[1], accel[2])
-
-    # %Convert to quaternion    
-    # q(:,1)=cos(pitch./2).*cos(roll./2);
-    # q(:,2)=cos(pitch./2).*sin(roll./2);
-    # q(:,3)=sin(pitch./2).*cos(roll./2);
-    # q(:,4)=-sin(pitch./2).*sin(roll./2);
-    q = np.zeros(shape=(4))
-    q[0] = cos(pitch / 2) * cos(roll / 2)
-    q[1] = cos(pitch / 2) * sin(roll / 2)
-    q[2] = sin(pitch / 2) * cos(roll / 2)
-    q[3] = sin(pitch / 2) * sin(roll / 2)
-
     return q
 
 def singleQuatToEuler(q: np.ndarray):
@@ -104,19 +104,18 @@ def quatToDCM(q: np.ndarray):
     
     return dcm
 
-def skew3(vec):
-    if len(vec) != 3:
-        raise ValueError('Skew function only takes vectors of size 3')
-    return np.cross(vec, np.identity(vec.shape[0]) * -1)
-
+# -- THESE FUNCTIONS SUPPORT OBJECT QUATERNIONS
 def ndarrayToQuat(q: np.ndarray) -> Quaternion:
-    if q.ndim != 1 or np.shape(q)[0] != 4:
+    if (q.ndim != 1 or np.shape(q)[0] != 4) :
         raise ValueError('Invalid quaternion matrix')
     
     return Quaternion(q[0], q[1], q[2], q[3])
 
 class Quaternion:
     def __init__(self, w: float = 1.0, x: float = 0.0, y: float = 0.0, z: float = 0.0):
+        if not(isinstance(w, (float, int)) and isinstance(x, (float, int)) and isinstance(y, (float, int)) and isinstance(z, (float, int))):
+            raise ValueError
+        
         self.quat = np.array([w, x, y, z])
 
     def w(self) -> float:
@@ -126,14 +125,23 @@ class Quaternion:
     def vector(self) -> np.ndarray:
         # returns the imaginary part of q
         return self.quat[1:]
+    
+    def __repr__(self):
+        return f'({self.quat})'
 
     def __getitem__(self, val):
         return self.quat[val]
+    
+    def __add__(self, other) -> Quaternion:
+        if not isinstance(other, Quaternion):
+            raise NotImplementedError
+        
+        return Quaternion(self[0] + other[0], self[1] + other[1], self[2] + other[2], self[3] + other[3])
 
     def __matmul__(self, other) -> Quaternion:
         # using __matmul__ to define quaternion multiplication
         if not isinstance(other, Quaternion):
-            raise NotImplemented
+            raise NotImplementedError
         
         q = Quaternion(self[0] * other[0] - self[1] * other[1] - self[2] * other[2] - self[3] * other[3],
                        self[0] * other[1] + self[1] * other[0] + self[2] * other[3] - self[3] * other[2],
@@ -188,3 +196,4 @@ class Quaternion:
         rightMul[0, 1:] = -self.vector()
         rightMul[1:, 0] = self.vector()
         rightMul[1:, 1:] = self.w() * np.eye(3) - skew3(self.vector())
+        return rightMul
